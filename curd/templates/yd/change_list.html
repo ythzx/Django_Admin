@@ -8,7 +8,8 @@
 <body>
     <h1>数据列表</h1>
     <!--func 后面传入参数 文件开头需要load导入yg_list-->
-    {% func result_list list_display %}
+    {% func result_list list_display curd_obj %}
     <!--使用模板函数 func 传入参数 result_list list_display-->
+    <!--更新 把curd_obj参数传到前端-->
 </body>
 </html>

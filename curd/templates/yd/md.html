@@ -1,4 +1,8 @@
 <table border="1">
+    <thead>
+
+    </thead>
+    <tbody>
     <!--item能够继续被循环(item本身就是列表数据)，传送过来的数据是列表套列表的格式-->
     {% for item in data %}
         <tr>
@@ -8,4 +12,5 @@
             {% endfor %}
         </tr>
     {% endfor %}
+    </tbody>
 </table>

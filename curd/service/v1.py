@@ -12,6 +12,7 @@ class BaseCurdAdmin(object):
     def __init__(self, model_class, site):
         self.model_class = model_class  # models_class 代表的是<class 'app01.models.Role'>
         self.site = site
+        self.request = None
 
     @property
     def urls(self):
@@ -39,14 +40,17 @@ class BaseCurdAdmin(object):
         # url = reverse('curd:app01_userinfo_changelist')  # 反向生成url
         # print(url)
         # return HttpResponse('...')
+        self.request = request # 把request封装进来 包含请求信息
         result_list = self.model_class.objects.all()  # 通过model_class 就能获取数据库中的queryset数据
-        print(result_list)
-        print(self.list_display)  # 从注册类的curd_plug中传进来
-        print(self.model_class)
+        # print(result_list)
+        # print(self.list_display)  # 从注册类的curd_plug中传进来
+        # print(self.model_class)
         context = {
             'result_list': result_list,
-            'list_display': self.list_display
+            'list_display': self.list_display,
+            'curd_obj':self
         }
+        # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
 
     def add_view(self, request):
@@ -72,8 +76,9 @@ class BaseCurdAdmin(object):
         修改数据
         :return:
         """
+
         info = self.model_class._meta.app_label, self.model_class._meta.model_name  # 自动生成元组
-        data = '%s%s' % info
+        data = '%s%s编辑页面' % info
         return HttpResponse(data)
 
 
