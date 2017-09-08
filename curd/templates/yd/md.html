@@ -1,6 +1,12 @@
 <table border="1">
     <thead>
-
+    <tr>
+        {% for row in header_list %}
+            <th>
+                {{ row }}
+            </th>
+        {% endfor %}
+    </tr>
     </thead>
     <tbody>
     <!--item能够继续被循环(item本身就是列表数据)，传送过来的数据是列表套列表的格式-->

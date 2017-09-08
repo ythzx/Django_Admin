@@ -16,7 +16,7 @@ class CurdUserInfo(v1.BaseCurdAdmin):
     自定制把函数名传递进去，用于编辑修改等操作
     """
 
-    def edit_func(self, obj):
+    def edit_func(self, obj=None,is_header=False):
         from django.urls import reverse
         """
         ！！self从yg_list.py接收过来 name(curd_obj,row) self中就有了model_class对象
@@ -31,20 +31,27 @@ class CurdUserInfo(v1.BaseCurdAdmin):
         # print(v1.site.namespace) # v1实例化一次后就是固定的，单例模式，v1中有namespace
 
         # name = '{0}:{1}_{2}_change'.format(v1.site.namespace, type(obj)._meta.app_label, type(obj)._meta.model_name)
-        name = "{0}:{1}_{2}_change".format(self.site.namespace, self.model_class._meta.app_label,
-                                           self.model_class._meta.model_name)
-        url = reverse(name, args=(obj.pk,))  # args 代表的是修改时的url中的参数 元组数据，这里必须是可迭代的对象
-        print(url)
-        return mark_safe("<a href='{0}'>编辑</a>".format(url))
+        if is_header:
+            return "操作"
+        else:
+            name = "{0}:{1}_{2}_change".format(self.site.namespace, self.model_class._meta.app_label,
+                                               self.model_class._meta.model_name)
+            url = reverse(name, args=(obj.pk,))  # args 代表的是修改时的url中的参数 元组数据，这里必须是可迭代的对象
+            print(url)
+            return mark_safe("<a href='{0}'>编辑</a>".format(url))
 
-    def check_box(self, obj):
-        tag = "<input type='checkbox' value='{}'>".format(obj.pk)
-        return mark_safe(tag)
+    def check_box(self,obj=None,is_header=False):
+        if is_header:
+            return "选项"
+        else:
+            tag = "<input type='checkbox' value='{}'>".format(obj.pk)
+            return mark_safe(tag)
 
     list_display = [check_box, 'id', 'username', 'email', edit_func]
 
 
 v1.site.register(models.UserInfo, CurdUserInfo)  # 把CurdUserInfo传入进去 xxx=BaseCurdAdmin进行接收
+# v1.site.register(models.UserInfo)  # 默认__all__ 没有定制
 
 
 class CurdRole(v1.BaseCurdAdmin):

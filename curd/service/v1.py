@@ -1,18 +1,27 @@
 from django.shortcuts import render, HttpResponse, redirect
 from django.urls import reverse
 
+""""
+使用方式：
 
-# 用于反向生成url
+"""
 
 
 class BaseCurdAdmin(object):
-    list_display = "__all__" # 用于展示所有的内容 这里是用于判断
+    """
+    处理所有的请求信息
+    """
+    list_display = "__all__"  # 用于展示所有的内容 这里是用于判断
+
     # list_display = [] # 也可以自己定制参数 这种情况不能进行定制 在注册的curd_plug.py中通过类写
 
     def __init__(self, model_class, site):
         self.model_class = model_class  # models_class 代表的是<class 'app01.models.Role'>
         self.site = site
         self.request = None
+
+        self.app_label = model_class._meta.app_label
+        self.model_name = model_class._meta.model_name
 
     @property
     def urls(self):
@@ -36,11 +45,20 @@ class BaseCurdAdmin(object):
         查看列表，是指定默认页面的函数
         :return:
         """
+        # 生成页面上，添加按钮
+        from django.http.request import QueryDict
+        param_dict = QueryDict(mutable=True) # 创建对象并允许修改
+        if request.GET:
+            param_dict['_changelistfilter'] = request.GET.urlencode() # 有encode方法 把对象中的数据转换成 page=1&name=2&
+        print(param_dict)
+        base_add_url = reverse('{0}:{1}_{2}_add'.format(self.site.namespace,self.app_label,self.model_name))  # namespace 在site中
+        add_url = "{0}?{1}".format(base_add_url,param_dict.urlencode()) # param_dict继续urlencode把链接中的QueryDict去除
+
         # print(self.model_class)
         # url = reverse('curd:app01_userinfo_changelist')  # 反向生成url
         # print(url)
         # return HttpResponse('...')
-        self.request = request # 把request封装进来 包含请求信息
+        self.request = request  # 把request封装进来 包含请求信息
         result_list = self.model_class.objects.all()  # 通过model_class 就能获取数据库中的queryset数据
         # print(result_list)
         # print(self.list_display)  # 从注册类的curd_plug中传进来
@@ -48,7 +66,8 @@ class BaseCurdAdmin(object):
         context = {
             'result_list': result_list,
             'list_display': self.list_display,
-            'curd_obj':self
+            'curd_obj': self,
+            'add_url':add_url
         }
         # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
@@ -83,13 +102,16 @@ class BaseCurdAdmin(object):
 
 
 class CurdSite(object):
+    """
+    程序入口类 用于注册models
+    """
     def __init__(self):
         self._registry = {}
-        self.namespace = 'curd'
+        self.namespace = 'curd'  # 反向生成URL
         self.app_name = 'curd'
 
     def register(self, model_class, xxx=BaseCurdAdmin):
-        self._registry[model_class] = xxx(model_class, self) # ？？？？？
+        self._registry[model_class] = xxx(model_class, self)  # ？？？？？
 
     def get_urls(self):
         from django.conf.urls import url, include
