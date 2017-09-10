@@ -66,11 +66,28 @@ class BaseCurdAdmin(object):
 
     # list_display = [] # 也可以自己定制参数 这种情况不能进行定制 在注册的curd_plug.py中通过类写
 
+    add_or_edit_modelform = None
+
+    def get_add_or_edit_modelform(self):
+        if self.add_or_edit_modelform:
+            return self.add_or_edit_modelform
+        else:
+            from django.forms import ModelForm
+            # class MyModelForm(ModelForm):
+            #     class Meta:
+            #         model = self.model_class  # 代表了models中表名的类 动态
+            #         fields = "__all__"
+
+            # 通过type创建类
+            _m = type('Meta', (object,), {'model': self.model_class, 'fields': "__all__"})
+            MyModelForm = type('MyModelForm', (ModelForm,), {'Meta': _m})
+            return MyModelForm
+
     def __init__(self, model_class, site):
         self.model_class = model_class  # models_class 代表的是<class 'app01.models.Role'>
         self.site = site
         self.request = None
-
+        # 下面用于反向生成URL
         self.app_label = model_class._meta.app_label
         self.model_name = model_class._meta.model_name
 
@@ -94,14 +111,16 @@ class BaseCurdAdmin(object):
     def changelist_view(self, request):
         """
         查看列表，是指定默认页面的函数
+        Django中request.GET获取的是QueryDict类型的数据，默认是不能修改的，通过参数mutable=True能进行修改
         :return:
         """
         # 生成页面上，添加按钮
-        from django.http.request import QueryDict
+        from django.http.request import QueryDict  # 通过type(request.GET)
+        # print(request.GET,type(request.GET))
         param_dict = QueryDict(mutable=True)  # 创建对象并允许修改
         if request.GET:
             param_dict['_changelistfilter'] = request.GET.urlencode()  # 有encode方法 把对象中的数据转换成 page=1&name=2&
-        print(param_dict)
+        # print(param_dict)
         base_add_url = reverse(
             '{0}:{1}_{2}_add'.format(self.site.namespace, self.app_label, self.model_name))  # namespace 在site中
         add_url = "{0}?{1}".format(base_add_url, param_dict.urlencode())  # param_dict继续urlencode把链接中的QueryDict去除
@@ -129,9 +148,15 @@ class BaseCurdAdmin(object):
         增加数据
         :return:
         """
-        info = self.model_class._meta.app_label, self.model_class._meta.model_name  # 自动生成元组
-        data = '%s%s' % info
-        return HttpResponse(data)
+        print(request.GET.get('_changelistfilter'))  # 获取url中的信息，最后进行拼接
+        if request.method == "GET":
+            modelform_obj = self.get_add_or_edit_modelform()()  # 先执行函数并实例化对象
+        else:
+            pass
+        context = {
+            'form': modelform_obj
+        }
+        return render(request, 'yd/add.html', context)
 
     def delete_view(self, request, pk):
         """
