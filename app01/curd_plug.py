@@ -47,7 +47,20 @@ class CurdUserInfo(v1.BaseCurdAdmin):
             tag = "<input type='checkbox' value='{}'>".format(obj.pk)
             return mark_safe(tag)
 
-    list_display = [check_box, 'id', 'username', 'email', edit_func]
+    def comb(self,obj=None,is_header=False):
+        """
+        在页面自定义列，通过函数名传递到前端
+
+        :param obj:
+        :param is_header:
+        :return:
+        """
+        if is_header:
+            return "自定义列"
+        else:
+            return "%s-%s"%(obj.username,obj.email)
+
+    list_display = [check_box, 'id', 'username', 'email',comb, edit_func]
 
 
 v1.site.register(models.UserInfo, CurdUserInfo)  # 把CurdUserInfo传入进去 xxx=BaseCurdAdmin进行接收

@@ -18,16 +18,18 @@ row 代表每一行数据
 
 """
 下面使用列表生成式和yield进行优化，只有在md.html循环的时候通过yield取这一次，提高效率
+注册时候没有继承CurdUserInfo类，就执行list_display == __all__,在页面显示对象
 """
 
 
 def table_body(result_list, list_display, curd_obj):
     for row in result_list:
         if list_display == "__all__":
-            yield [str(row),]
+            yield [str(row), ]  # models 中使用了__str__ 方法 这里显示对象的时候执行__str__方法
         # yield [getattr(row, name) for name in list_display]
-        yield [name(curd_obj, obj=row) if isinstance(name, FunctionType) else getattr(row, name) for name in
-               list_display]
+        else:
+            yield [name(curd_obj, obj=row) if isinstance(name, FunctionType) else getattr(row, name) for name in
+                   list_display]
         """
         传递进来的参数中有定制的函数，通过FunctionType判断是否是函数，三元运算，是函数执行name() 传入参数row代表一行数据的的对象
         不是函数执行getattr获取数据
@@ -53,9 +55,9 @@ def table_head(list_display, curd_obj):
     else:
         for item in list_display:
             if isinstance(item, FunctionType):
-                yield item(curd_obj,is_header=True)
+                yield item(curd_obj, is_header=True)
             else:
-                yield curd_obj.model_class._meta.get_field(item).verbose_name #
+                yield curd_obj.model_class._meta.get_field(item).verbose_name  #
 
 
 @register.inclusion_tag('yd/md.html')

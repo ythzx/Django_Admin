@@ -1,9 +1,60 @@
 from django.shortcuts import render, HttpResponse, redirect
 from django.urls import reverse
 
-""""
-使用方式：
+"""
+使用文档：
+1. 数据列表页面,定制显示烈
+    示例一：
+        v1.site.register(models.UserInfo)， 默认只显示对象列表
 
+
+    示例二：
+        class CurdUserInfo(v1.BaseCurdAdmin):
+            list_display = []
+
+        v1.site.register(Model,SubClass), 按照list_display中指定的字段进行显示
+        PS: 字段可以
+                - 字符串，必须是数据库列明
+                - 函数，
+                    def comb(self,obj=None,is_header=False):
+                        if is_header:
+                            return "自定义列"
+                        else:
+                            return "%s-%s"%(obj.username,obj.email)
+
+            完整示例如下：
+                class CurdUserInfo(v1.BaseCurdAdmin):
+                    def edit_func(self, obj=None,is_header=False):
+                        from django.urls import reverse
+                        # print(type(obj)._meta.app_label) # 通过type() 把obj变成类的对象
+                        # print(type(obj)._meta.model_name)
+                        # print(v1.site.namespace) # v1实例化一次后就是固定的，单例模式，v1中有namespace
+
+                        # name = '{0}:{1}_{2}_change'.format(v1.site.namespace, type(obj)._meta.app_label, type(obj)._meta.model_name)
+                        if is_header:
+                            return "操作"
+                        else:
+                            name = "{0}:{1}_{2}_change".format(self.site.namespace, self.model_class._meta.app_label,
+                                                               self.model_class._meta.model_name)
+                            url = reverse(name, args=(obj.pk,))  # args 代表的是修改时的url中的参数 元组数据，这里必须是可迭代的对象
+                            print(url)
+                            return mark_safe("<a href='{0}'>编辑</a>".format(url))
+
+                    def check_box(self,obj=None,is_header=False):
+                        if is_header:
+                            return "选项"
+                        else:
+                            tag = "<input type='checkbox' value='{}'>".format(obj.pk)
+                            return mark_safe(tag)
+
+                    def comb(self,obj=None,is_header=False):
+
+                        if is_header:
+                            return "自定义列"
+                        else:
+                            return "%s-%s"%(obj.username,obj.email)
+
+                    list_display = [check_box, 'id', 'username', 'email',comb, edit_func]
 """
 
 
@@ -47,12 +98,13 @@ class BaseCurdAdmin(object):
         """
         # 生成页面上，添加按钮
         from django.http.request import QueryDict
-        param_dict = QueryDict(mutable=True) # 创建对象并允许修改
+        param_dict = QueryDict(mutable=True)  # 创建对象并允许修改
         if request.GET:
-            param_dict['_changelistfilter'] = request.GET.urlencode() # 有encode方法 把对象中的数据转换成 page=1&name=2&
+            param_dict['_changelistfilter'] = request.GET.urlencode()  # 有encode方法 把对象中的数据转换成 page=1&name=2&
         print(param_dict)
-        base_add_url = reverse('{0}:{1}_{2}_add'.format(self.site.namespace,self.app_label,self.model_name))  # namespace 在site中
-        add_url = "{0}?{1}".format(base_add_url,param_dict.urlencode()) # param_dict继续urlencode把链接中的QueryDict去除
+        base_add_url = reverse(
+            '{0}:{1}_{2}_add'.format(self.site.namespace, self.app_label, self.model_name))  # namespace 在site中
+        add_url = "{0}?{1}".format(base_add_url, param_dict.urlencode())  # param_dict继续urlencode把链接中的QueryDict去除
 
         # print(self.model_class)
         # url = reverse('curd:app01_userinfo_changelist')  # 反向生成url
@@ -67,7 +119,7 @@ class BaseCurdAdmin(object):
             'result_list': result_list,
             'list_display': self.list_display,
             'curd_obj': self,
-            'add_url':add_url
+            'add_url': add_url
         }
         # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
@@ -105,6 +157,7 @@ class CurdSite(object):
     """
     程序入口类 用于注册models
     """
+
     def __init__(self):
         self._registry = {}
         self.namespace = 'curd'  # 反向生成URL
