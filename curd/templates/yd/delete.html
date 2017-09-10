@@ -1,0 +1,15 @@
+{% load yg_list %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>删除数据</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="submit" value="删除">
+    </form>
+</body>
+</html>

@@ -16,7 +16,7 @@ class CurdUserInfo(v1.BaseCurdAdmin):
     自定制把函数名传递进去，用于编辑修改等操作
     """
 
-    def edit_func(self, obj=None,is_header=False):
+    def edit_func(self, obj=None, is_header=False):
         from django.urls import reverse
         """
         ！！self从yg_list.py接收过来 name(curd_obj,row) self中就有了model_class对象
@@ -34,20 +34,48 @@ class CurdUserInfo(v1.BaseCurdAdmin):
         if is_header:
             return "操作"
         else:
-            name = "{0}:{1}_{2}_change".format(self.site.namespace, self.model_class._meta.app_label,
-                                               self.model_class._meta.model_name)
-            url = reverse(name, args=(obj.pk,))  # args 代表的是修改时的url中的参数 元组数据，这里必须是可迭代的对象
-            print(url)
-            return mark_safe("<a href='{0}'>编辑</a>".format(url))
+            # name = "{0}:{1}_{2}_change".format(self.site.namespace, self.model_class._meta.app_label,
+            #                                    self.model_class._meta.model_name)
+            # url = reverse(name, args=(obj.pk,))  # args 代表的是修改时的url中的参数 元组数据，这里必须是可迭代的对象
+            from django.http.request import QueryDict
+            param_dict = QueryDict(mutable=True)  # 创建对象并允许修改
+            if self.request.GET:
+                """
+                request中有url中的请求信息，自己没有从父类中找，父类中的是self.request
+                """
+                param_dict['_changelistfilter'] = self.request.GET.urlencode()
+            base_add_url = reverse('{0}:{1}_{2}_change'.format(self.site.namespace, self.app_label, self.model_name),
+                                   args=(obj.pk,))  # args后面是元组数据
+            edit_url = "{0}?{1}".format(base_add_url, param_dict.urlencode())  # param_dict继续urlencode把链接中的QueryDict去除
 
-    def check_box(self,obj=None,is_header=False):
+            return mark_safe("<a href='{0}'>编辑</a>".format(edit_url))
+
+    def check_box(self, obj=None, is_header=False):
         if is_header:
             return "选项"
         else:
             tag = "<input type='checkbox' value='{}'>".format(obj.pk)
             return mark_safe(tag)
 
-    def comb(self,obj=None,is_header=False):
+    def delete(self, obj=None, is_header=False):
+        from django.urls import reverse
+        if is_header:
+            return "删除"
+        else:
+            from django.http.request import QueryDict
+            param_dict = QueryDict(mutable=True)  # 创建对象并允许修改
+            if self.request.GET:
+                """
+                request中有url中的请求信息，自己没有从父类中找，父类中的是self.request
+                """
+                param_dict['_changelistfilter'] = self.request.GET.urlencode()
+            base_add_url = reverse('{0}:{1}_{2}_delete'.format(self.site.namespace, self.app_label, self.model_name),
+                                   args=(obj.pk,))  # args后面是元组数据
+            delete_url = "{0}?{1}".format(base_add_url, param_dict.urlencode())  # param_dict继续urlencode把链接中的QueryDict去除
+
+            return mark_safe("<a href='{0}'>删除</a>".format(delete_url))
+
+    def comb(self, obj=None, is_header=False):
         """
         在页面自定义列，通过函数名传递到前端
 
@@ -58,12 +86,14 @@ class CurdUserInfo(v1.BaseCurdAdmin):
         if is_header:
             return "自定义列"
         else:
-            return "%s-%s"%(obj.username,obj.email)
+            return "%s-%s" % (obj.username, obj.email)
 
-    list_display = [check_box, 'id', 'username', 'email',comb, edit_func]
+    list_display = [check_box, 'id', 'username', 'email', comb, edit_func, delete]
 
 
 v1.site.register(models.UserInfo, CurdUserInfo)  # 把CurdUserInfo传入进去 xxx=BaseCurdAdmin进行接收
+
+
 # v1.site.register(models.UserInfo)  # 默认__all__ 没有定制
 
 

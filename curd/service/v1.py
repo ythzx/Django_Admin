@@ -159,7 +159,7 @@ class BaseCurdAdmin(object):
                 base_list_url = reverse(
                     '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name))  # namespace 在site中
                 list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
-                return redirect(list_url)
+                return redirect(list_url) # 跳转到新的列表页面
         context = {
             'form': modelform_obj
         }
@@ -168,21 +168,47 @@ class BaseCurdAdmin(object):
     def delete_view(self, request, pk):
         """
         删除数据
+        1 通过pk获取数据
+        2 删除数据
         :return:
         """
-        info = self.model_class._meta.app_label, self.model_class._meta.model_name  # 自动生成元组
-        data = '%s%s' % info
-        return HttpResponse(data)
+        if request.method == "GET":
+            return render(request, 'yd/delete.html')
+        else:
+            obj = self.model_class.objects.filter(pk=pk).delete()
+            base_list_url = reverse('{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
+                                                self.model_name))  # namespace 在site中
+            list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
+            return redirect(list_url)  # 跳转到新的列表页面
+
+
 
     def change_view(self, request, pk):
         """
         修改数据
+        1 从_changelistfilter中获取数据
+        2 在页面显示默认值 instance
         :return:
         """
-
-        info = self.model_class._meta.app_label, self.model_class._meta.model_name  # 自动生成元组
-        data = '%s%s编辑页面' % info
-        return HttpResponse(data)
+        obj = self.model_class.objects.filter(pk=pk).first() # 从数据库中获取数据
+        if not obj:
+            return HttpResponse("id不存在")
+        if request.method == "GET":
+            modelform_obj = self.get_add_or_edit_modelform()(instance=obj) # instance = obj 显示默认值
+        else:
+            modelform_obj = self.get_add_or_edit_modelform()(data=request.POST,files=request.FILES,instance=obj)
+            # 参数中的instance代表修改数据，不加此参数，默认是增加数据
+            if modelform_obj.is_valid():
+                modelform_obj.save()
+                base_list_url = reverse(
+                    '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
+                                                    self.model_name))  # namespace 在site中
+                list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
+                return redirect(list_url)  # 跳转到新的列表页面
+        context = {
+            'form': modelform_obj
+        }
+        return render(request,'yd/edit.html',context)
 
 
 class CurdSite(object):
