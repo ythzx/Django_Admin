@@ -152,7 +152,14 @@ class BaseCurdAdmin(object):
         if request.method == "GET":
             modelform_obj = self.get_add_or_edit_modelform()()  # 先执行函数并实例化对象
         else:
-            pass
+            modelform_obj = self.get_add_or_edit_modelform()(data=request.POST, files=request.FILES)
+            if modelform_obj.is_valid():
+                modelform_obj.save()
+                # 提交成功后返回列表页面
+                base_list_url = reverse(
+                    '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name))  # namespace 在site中
+                list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
+                return redirect(list_url)
         context = {
             'form': modelform_obj
         }
