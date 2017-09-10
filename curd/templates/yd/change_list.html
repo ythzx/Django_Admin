@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.css">
 </head>
 <body>
     <h1>数据列表</h1>
     <!--================添加按钮======================-->
-    <a href="{{ add_url }}">添加</a>
+    <a class="btn btn-success" href="{{ add_url }}">添加</a>
     <!--================数据表格开始======================-->
     <!--func 后面传入参数 文件开头需要load导入yg_list-->
     {% func result_list list_display curd_obj %}

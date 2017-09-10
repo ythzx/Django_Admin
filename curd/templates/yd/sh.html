@@ -1,0 +1,8 @@
+
+
+{% for item in data %}
+{#    <p>{{ item.name }}:{{ item }}</p>#}
+    {% for row in item %}
+        <p>{{ row.0 }}:{{ row.1 }}</p>
+    {% endfor %}
+{% endfor %}

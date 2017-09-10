@@ -161,8 +161,14 @@ class BaseCurdAdmin(object):
                 list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
                 return redirect(list_url) # 跳转到新的列表页面
         context = {
-            'form': modelform_obj
+            'form': modelform_obj,
+            'curd_obj': self,
         }
+        # for item in modelform_obj:
+        #
+        #     from django.forms.boundfield import BoundField
+        #     print(self.model_class._meta.get_field(item.name).verbose_name) # 数据库中的中文字段名
+        #     print(item.name,type(item))
         return render(request, 'yd/add.html', context)
 
     def delete_view(self, request, pk):
