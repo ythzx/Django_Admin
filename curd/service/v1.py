@@ -164,11 +164,14 @@ class BaseCurdAdmin(object):
             'form': modelform_obj,
             'curd_obj': self,
         }
-        # for item in modelform_obj:
-        #
-        #     from django.forms.boundfield import BoundField
-        #     print(self.model_class._meta.get_field(item.name).verbose_name) # 数据库中的中文字段名
-        #     print(item.name,type(item))
+        '''
+        # 后台测试
+        from django.forms.boundfield import BoundField
+        for item in modelform_obj:
+            # print(self.model_class._meta.get_field(item.name).verbose_name) # 数据库中的中文字段名
+            print(item.name,item.field.label)  # item.field.label就是获取的数据库中的verbosename
+            from django.forms.fields import CharField  # CharField继承Field
+        '''
         return render(request, 'yd/add.html', context)
 
     def delete_view(self, request, pk):

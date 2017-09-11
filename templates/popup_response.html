@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    //将数据发送给发起popup的页面
+    opener.popupCallBack1('{{ popid }}', '{{ id }}', '{{ title }}'); // 注意这里是字符串形式的
+    window.close(); // 关闭页面
+</script>
+</body>
+</html>

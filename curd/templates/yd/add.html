@@ -1,4 +1,4 @@
-{% load yg_page %}
+{% load yg_form %} <!--导入模板函数ug_form-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,10 +10,18 @@
     <h1>增加数据</h1>
     <form method="POST" novalidate>
         {% csrf_token %}
-{#        {{ form.as_p }}#}
-        {% func form curd_obj %}
-        <input type="submit" value="提交">
-    </form>
+        {% for item in form %}
+        <p>
+            {{ item.field.label }}
+            {{ item }}
+            <a href="{{ col.popup_url }}">添加</a>
+            {{ item.errors.0 }}
+        </p>
+    {% endfor %}
 
+    <input type="submit" value="提交">
+</form>
+
+{#    {% show_add_edit_form form %} <!--调用模板函数show_add_edit_form，传入参数form-->#}
 </body>
 </html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>测试添加数据</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="title">
+        <input type="submit" value="提交">
+    </form>
+    <a href="#" onclick="popupUrl('/xxxxx/')">再发起一个</a>
+    <script>
+        function popupUrl(url) {
+            window.open(url,'x1',"status=1,height:500,width:600,toolbar=0,resizeable=0")
+        }
+    </script>
+</body>
+</html>
