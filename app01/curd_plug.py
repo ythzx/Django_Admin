@@ -102,3 +102,5 @@ class CurdRole(v1.BaseCurdAdmin):
 
 
 v1.site.register(models.Role, CurdRole)  # 把CurdRole传进去 就是把list_display传进去
+
+v1.site.register(models.UserGroup)  # 注册UserGroup

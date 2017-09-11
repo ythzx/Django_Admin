@@ -7,31 +7,25 @@
 <body>
 <p>用户名：<input type="text"></p>
 <p>用户组：
-    <select id="ugID">  <!--给select添加id-->
+    <select id="ugID">
         {% for row in user_group_list %}
             <option value="{{ row.pk }}">{{ row.title }}</option>
         {% endfor %}
     </select>
-    <!--对a标签绑定事件，点击的时候新建一个popup页面，内部的参数设置成添加页面的URL-->
     <a href="#" onclick="popupUrl('/add_test/?popup=ugID')">添加</a>
 </p>
 
 <script>
-    //function 接收参数 url
     function popupUrl(url) {
         window.open(url, "x1", "status=1,height=500,width=600,toolbar=0,resizeable=0");
         // 设置popup的长度宽度 height=500,width=600
     }
-
-    //发起popup页面的函数，在response中的opener中调用
-    //生成option标签并设置属性
-    //popupCallBack1 用于接收response.html页面发送的过来的数据
     function popupCallBack1(popid, opid, optext) {
         var tag = document.createElement('option');
         tag.innerHTML = optext;
         tag.setAttribute('value', opid);
         tag.setAttribute('selected', 'selected');// 默认选中添加的选项
-        document.getElementById(popid).appendChild(tag); // ug_ID最终传回来，通过id找到要添加的标签
+        document.getElementById(popid).appendChild(tag);
     }
 </script>
 </body>

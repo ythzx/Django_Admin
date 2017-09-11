@@ -8,20 +8,6 @@
 </head>
 <body>
     <h1>增加数据</h1>
-    <form method="POST" novalidate>
-        {% csrf_token %}
-        {% for item in form %}
-        <p>
-            {{ item.field.label }}
-            {{ item }}
-            <a href="{{ col.popup_url }}">添加</a>
-            {{ item.errors.0 }}
-        </p>
-    {% endfor %}
-
-    <input type="submit" value="提交">
-</form>
-
-{#    {% show_add_edit_form form %} <!--调用模板函数show_add_edit_form，传入参数form-->#}
+    {% show_add_edit_form form %} <!--调用模板函数show_add_edit_form，传入参数form-->
 </body>
 </html>

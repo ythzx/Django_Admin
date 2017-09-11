@@ -167,10 +167,18 @@ class BaseCurdAdmin(object):
         '''
         # 后台测试
         from django.forms.boundfield import BoundField
+        from django.forms.models import ModelChoiceField,ModelMultipleChoiceField
         for item in modelform_obj:
             # print(self.model_class._meta.get_field(item.name).verbose_name) # 数据库中的中文字段名
-            print(item.name,item.field.label)  # item.field.label就是获取的数据库中的verbosename
-            from django.forms.fields import CharField  # CharField继承Field
+            # print(item.name,item.field.label)  # item.field.label就是获取的数据库中的verbosename
+            if isinstance(item.field,ModelChoiceField):
+                # ModelMultipleChoiceField 继承 ModelChoiceField 所以FK和M2M中的都会打印
+                print(item.field.queryset) # item.field.queryset ModelForm中实时刷新数据库用的是queryset
+                # print(type(item.field.queryset))
+                from django.db.models.query import QuerySet
+                print(item.field.queryset.model) # <class 'app01.models.UserGroup'> model中有关联表
+                print(item.field.queryset.model._meta.app_label) # 获取APP的名字
+                print(item.field.queryset.model._meta.model_name) # 获取小写的表名
         '''
         return render(request, 'yd/add.html', context)
 
