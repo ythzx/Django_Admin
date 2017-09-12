@@ -162,20 +162,41 @@ class BaseCurdAdmin(object):
         for option in self.filter_list:
             if option.is_func:
                 """
-                当是函数的时候
+                当是函数的时候,加括号执行函数，在这里向函数中传入参数self+request
                 """
-                data_list = option.field_or_func(self,request)  # ？？？
+                data_list = option.field_or_func(self,request)  # 函数的返回值
             else:
                 from django.db.models import ForeignKey,ManyToManyField
                 field = self.model_class._meta.get_field(option.field_or_func)
+                """
+                option.field_or_func 此时是字符串类型，如何通过字符串判断是FK M2M？
+                self.model_class找到类名，self.modle_class._meta.get_field('ug')加字符串找到相应的字段
+                通过isinstance判断是否是FK M2M
+                """
                 if isinstance(field,ForeignKey):
+                    """
+                    通过FK字段找关联的表，ForeignKey中的to 传递给rel,rel中有model方法
+                    field.rel.model就找到了FK关联的表，然后进行model查询数据
+                    """
+                    # print(field.rel.model) # UserGroup表
                     data_list = field.rel.model.objects.all()
                 elif isinstance(field,ManyToManyField):
+                    """
+                    ManyToManyField 继承FK ，同上
+                    """
+                    # print(field.rel.model) # Role表
                     data_list = field.rel.model.objects.all()
                 else:
-                    print(field.model,self.model_class)
+                    """
+                    UserInfo 表中的CharField,通过field.model和self.model_class都能找到相应的表
+                    """
+                    # print(field.model,self.model_class) # UserInfo 表
                     data_list = field.model.objects.all()
             filter_list.append(data_list)
+            """
+            最终的filter_list数据是三条Queryset数据，代表从数据库查询到的数据
+            每一个Queryset还能循环，循环后的数据就是每一个对象
+            """
         context = {
             'result_list': result_list,
             'list_display': self.list_display,
