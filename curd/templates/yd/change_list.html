@@ -9,6 +9,18 @@
 <body>
 <div class="container">
     <h1>数据列表</h1>
+    {% if filter_list %}
+        <div class="row">
+            <h3>组合搜索</h3>
+            {% for queryset in filter_list %}
+                <div class="row">
+                    {% for row in queryset %}
+                        <a href="#">{{ row }}</a>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <form method="POST">
         {% csrf_token %}
         {% if action_list %} <!--有action定制操作的时候显示-->

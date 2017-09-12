@@ -54,7 +54,7 @@ class CurdUserInfo(v1.BaseCurdAdmin):
         if is_header:
             return "选项"
         else:
-            tag = "<input value={} type='checkbox' name='pk'>".format(obj.pk) # checkbox的value属性设置成pk 后台通过name属性获取
+            tag = "<input value={} type='checkbox' name='pk'>".format(obj.pk)  # checkbox的value属性设置成pk 后台通过name属性获取
             return mark_safe(tag)
 
     def delete(self, obj=None, is_header=False):
@@ -90,7 +90,7 @@ class CurdUserInfo(v1.BaseCurdAdmin):
 
     list_display = [check_box, 'id', 'username', 'email', comb, edit_func, delete]
 
-    # ############## 定制action操作 ##############
+    # ################################### 定制action操作 ###################################
     def initial(self, request):
         """
         定制action初始化操作
@@ -99,8 +99,6 @@ class CurdUserInfo(v1.BaseCurdAdmin):
                 False 返回列表页面
         """
         pk_list = request.POST.getlist('pk')  # 获取批量的id pk，pk是在设置的
-        print("11111111111111111")
-        print(request.POST)
         models.UserInfo.objects.filter(pk__in=pk_list).update(username="xxxxxx")
         return True
 
@@ -116,7 +114,35 @@ class CurdUserInfo(v1.BaseCurdAdmin):
 
     multi_del.text = "批量删除"
 
-    action_list = [initial, multi_del] # 定制的action操作列表
+    action_list = [initial, multi_del]  # 定制的action操作列表
+
+    # ########################################## 筛选条件 ##########################################
+
+    from .filter_code import FilterOption
+    """
+    把对象封装到FilterOption类中，传入的参数：
+    field_or_func：数据库的字段或者函数
+    is_multi=False：是否是多选，这里默认是单选
+    """
+    filter_list = [
+        FilterOption('username', False),
+        FilterOption('ug', False),
+        FilterOption('mmm', False),
+    ]
+    """
+    # 1.取数据，放在页面上？
+    #  username -> UserInfo表取数据
+    #  ug       -> UserGroup表
+    #  mmm      -> Role表
+    # 2.单选和多选自定义
+    # reuqest.GET    {'fk': [6,],'username': ['哈哈']} 数据结构是类似字典的结构，value的值是列表数据
+    # reuqest.GET.urlencode() 通过urlencode把URL中的参数转换成fk=6&username=哈哈
+    # 注意注意注意：
+    # 保留当前URL条件 + 自身条件
+    # - 单选： /arya/app01/userinfo/?mm=2&fk=2&username=哈哈
+    # - 多选： /arya/app01/userinfo/?mm=2&fk=2&fk=7&username=哈哈
+    # 反向生成url：reverse + reuqest.GET.urlencode()
+    """
 
 
 v1.site.register(models.UserInfo, CurdUserInfo)  # 把CurdUserInfo传入进去 xxx=BaseCurdAdmin进行接收

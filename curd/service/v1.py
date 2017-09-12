@@ -68,6 +68,8 @@ class BaseCurdAdmin(object):
 
     action_list = [] # 默认的action列表中为空，在注册页面进行操作
 
+    filter_list = [] # 筛选条件
+
     add_or_edit_modelform = None
 
     def get_add_or_edit_modelform(self):
@@ -137,11 +139,11 @@ class BaseCurdAdmin(object):
         # print(self.list_display)  # 从注册类的curd_plug中传进来
         # print(self.model_class)
 
-        # ######### Action操作 #########
+        # #################################### Action操作 ####################################
         # get请求,显示下拉框
         action_list = []
         for item in self.action_list:
-            tpl = {'name':item.__name__,'text':item.text}  # item.__name__ 是获取函数名
+            tpl = {'name':item.__name__,'text':item.text}  # item.__name__ 是获取函数名,item.text获取设置的函数中文名
             action_list.append(tpl)
         if request.method == "POST":
             # 获取action
@@ -155,11 +157,31 @@ class BaseCurdAdmin(object):
                 action_page_url = "{0}?{1}".format(action_page_url,request.GET.urlencode())
             return redirect(action_page_url)
 
+        # ################################ 组合搜索条件 ################################
+        filter_list =[]
+        for option in self.filter_list:
+            if option.is_func:
+                """
+                当是函数的时候
+                """
+                data_list = option.field_or_func(self,request)  # ？？？
+            else:
+                from django.db.models import ForeignKey,ManyToManyField
+                field = self.model_class._meta.get_field(option.field_or_func)
+                if isinstance(field,ForeignKey):
+                    data_list = field.rel.model.objects.all()
+                elif isinstance(field,ManyToManyField):
+                    data_list = field.rel.model.objects.all()
+                else:
+                    print(field.model,self.model_class)
+                    data_list = field.model.objects.all()
+            filter_list.append(data_list)
         context = {
             'result_list': result_list,
             'list_display': self.list_display,
             'curd_obj': self,
             'add_url': add_url,
+            'filter_list':filter_list,
             'action_list':action_list
         }
         # 注意把self这个对象传递到了前端
