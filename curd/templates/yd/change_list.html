@@ -7,16 +7,32 @@
     <link rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.css">
 </head>
 <body>
+<div class="container">
     <h1>数据列表</h1>
-    <!--================添加按钮======================-->
-    <a class="btn btn-success" href="{{ add_url }}">添加</a>
-    <!--================数据表格开始======================-->
-    <!--func 后面传入参数 文件开头需要load导入yg_list-->
-    <div style="width: 700px">
+    <form method="POST">
+        {% csrf_token %}
+        {% if action_list %} <!--有action定制操作的时候显示-->
+            <div class="row">
+                <select class="form-control" name="action" style="display: inline-block;width: 200px">
+                    <!--设置selectd的name属性是action，后台request.POST.get('option')获取-->
+                    {% for item in action_list %}
+                        <option value="{{ item.name }}">{{ item.text }}</option>
+                        <!--value 设置成函数名 item.text 是函数的中文名-->
+                    {% endfor %}
+                </select>
+                <input class="btn btn-primary" type="submit" value="执行">
+            </div>
+
+        {% endif %}
+        <!--================添加按钮======================-->
+        <a class="btn btn-success" style="float: right" href="{{ add_url }}">添加</a>
+        <!--================数据表格开始======================-->
+        <!--func 后面传入参数 文件开头需要load导入yg_list-->
         {% func result_list list_display curd_obj %}
         <!--使用模板函数 func 传入参数 result_list list_display-->
         <!--更新 把curd_obj参数传到前端-->
         <!--================数据表格结束======================-->
-    </div>
+    </form>
+</div>
 </body>
 </html>

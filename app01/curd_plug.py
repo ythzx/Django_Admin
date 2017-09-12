@@ -54,7 +54,7 @@ class CurdUserInfo(v1.BaseCurdAdmin):
         if is_header:
             return "选项"
         else:
-            tag = "<input type='checkbox' value='{}'>".format(obj.pk)
+            tag = "<input value={} type='checkbox' name='pk'>".format(obj.pk) # checkbox的value属性设置成pk 后台通过name属性获取
             return mark_safe(tag)
 
     def delete(self, obj=None, is_header=False):
@@ -89,6 +89,34 @@ class CurdUserInfo(v1.BaseCurdAdmin):
             return "%s-%s" % (obj.username, obj.email)
 
     list_display = [check_box, 'id', 'username', 'email', comb, edit_func, delete]
+
+    # ############## 定制action操作 ##############
+    def initial(self, request):
+        """
+        定制action初始化操作
+        :param request:
+        :return: True 返回true的时候保存原来的条件
+                False 返回列表页面
+        """
+        pk_list = request.POST.getlist('pk')  # 获取批量的id pk，pk是在设置的
+        print("11111111111111111")
+        print(request.POST)
+        models.UserInfo.objects.filter(pk__in=pk_list).update(username="xxxxxx")
+        return True
+
+    initial.text = "初始化"  # 把函数名的text设置成中文
+
+    def multi_del(self, request):
+        """
+        定制批量删除
+        :param request:
+        :return:
+        """
+        pass
+
+    multi_del.text = "批量删除"
+
+    action_list = [initial, multi_del] # 定制的action操作列表
 
 
 v1.site.register(models.UserInfo, CurdUserInfo)  # 把CurdUserInfo传入进去 xxx=BaseCurdAdmin进行接收

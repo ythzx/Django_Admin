@@ -66,6 +66,8 @@ class BaseCurdAdmin(object):
 
     # list_display = [] # 也可以自己定制参数 这种情况不能进行定制 在注册的curd_plug.py中通过类写
 
+    action_list = [] # 默认的action列表中为空，在注册页面进行操作
+
     add_or_edit_modelform = None
 
     def get_add_or_edit_modelform(self):
@@ -134,11 +136,31 @@ class BaseCurdAdmin(object):
         # print(result_list)
         # print(self.list_display)  # 从注册类的curd_plug中传进来
         # print(self.model_class)
+
+        # ######### Action操作 #########
+        # get请求,显示下拉框
+        action_list = []
+        for item in self.action_list:
+            tpl = {'name':item.__name__,'text':item.text}  # item.__name__ 是获取函数名
+            action_list.append(tpl)
+        if request.method == "POST":
+            # 获取action
+            func_name_str = request.POST.get('action')  # 获取select标签中选中的内容
+            ret = getattr(self,func_name_str)(request) # 通过字符串执行函数，并传入参数request，返回值是ret
+            action_page_url = reverse(
+                '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name)
+            )
+            if ret:
+                # 返回值是true的时候
+                action_page_url = "{0}?{1}".format(action_page_url,request.GET.urlencode())
+            return redirect(action_page_url)
+
         context = {
             'result_list': result_list,
             'list_display': self.list_display,
             'curd_obj': self,
-            'add_url': add_url
+            'add_url': add_url,
+            'action_list':action_list
         }
         # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
