@@ -66,9 +66,9 @@ class BaseCurdAdmin(object):
 
     # list_display = [] # 也可以自己定制参数 这种情况不能进行定制 在注册的curd_plug.py中通过类写
 
-    action_list = [] # 默认的action列表中为空，在注册页面进行操作
+    action_list = []  # 默认的action列表中为空，在注册页面进行操作
 
-    filter_list = [] # 筛选条件
+    filter_list = []  # 筛选条件
 
     add_or_edit_modelform = None
 
@@ -143,67 +143,81 @@ class BaseCurdAdmin(object):
         # get请求,显示下拉框
         action_list = []
         for item in self.action_list:
-            tpl = {'name':item.__name__,'text':item.text}  # item.__name__ 是获取函数名,item.text获取设置的函数中文名
+            tpl = {'name': item.__name__, 'text': item.text}  # item.__name__ 是获取函数名,item.text获取设置的函数中文名
             action_list.append(tpl)
         if request.method == "POST":
             # 获取action
             func_name_str = request.POST.get('action')  # 获取select标签中选中的内容
-            ret = getattr(self,func_name_str)(request) # 通过字符串执行函数，并传入参数request，返回值是ret
+            ret = getattr(self, func_name_str)(request)  # 通过字符串执行函数，并传入参数request，返回值是ret
             action_page_url = reverse(
                 '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name)
             )
             if ret:
                 # 返回值是true的时候
-                action_page_url = "{0}?{1}".format(action_page_url,request.GET.urlencode())
+                action_page_url = "{0}?{1}".format(action_page_url, request.GET.urlencode())
             return redirect(action_page_url)
 
         # ################################ 组合搜索条件 ################################
-        filter_list =[]
+        """
+        把datalist(queryset数据)，封装到utils/fliter_code中的类中，同时把request封装进去（request.GET中的url信息）
+        """
+        from curd.utils.filter_code import FilterList
+        filter_list = []
         for option in self.filter_list:
+            """
+            option代表的是注册的时候curd_plug.py中封装的对象
+            filter_list = [
+                FilterOption('username', False),
+                FilterOption('ug', False),
+                FilterOption('mmm', False),
+            ]
+            FilterList中有__iter__方法，才能被for循环
+            """
             if option.is_func:
                 """
                 当是函数的时候,加括号执行函数，在这里向函数中传入参数self+request
                 """
-                data_list = option.field_or_func(self,request)  # 函数的返回值
+                data_list = option.field_or_func(self, request)  # 函数的返回值
             else:
-                from django.db.models import ForeignKey,ManyToManyField
+                from django.db.models import ForeignKey, ManyToManyField
                 field = self.model_class._meta.get_field(option.field_or_func)
                 """
                 option.field_or_func 此时是字符串类型，如何通过字符串判断是FK M2M？
                 self.model_class找到类名，self.modle_class._meta.get_field('ug')加字符串找到相应的字段
                 通过isinstance判断是否是FK M2M
                 """
-                if isinstance(field,ForeignKey):
+                if isinstance(field, ForeignKey):
                     """
                     通过FK字段找关联的表，ForeignKey中的to 传递给rel,rel中有model方法
                     field.rel.model就找到了FK关联的表，然后进行model查询数据
                     """
                     # print(field.rel.model) # UserGroup表
-                    data_list = field.rel.model.objects.all()
-                elif isinstance(field,ManyToManyField):
+                    data_list = FilterList(option, field.rel.model.objects.all(), request.GET)  # 把对象,queryset,URL信息封装
+                elif isinstance(field, ManyToManyField):
                     """
                     ManyToManyField 继承FK ，同上
                     """
                     # print(field.rel.model) # Role表
-                    data_list = field.rel.model.objects.all()
+                    data_list = FilterList(option, field.rel.model.objects.all(), request.GET)
                 else:
                     """
                     UserInfo 表中的CharField,通过field.model和self.model_class都能找到相应的表
                     """
                     # print(field.model,self.model_class) # UserInfo 表
-                    data_list = field.model.objects.all()
+                    data_list = FilterList(option, field.model.objects.all(), request.GET)
             filter_list.append(data_list)
             """
-            最终的filter_list数据是三条Queryset数据，代表从数据库查询到的数据
+            之前的filter_list数据是三条Queryset数据，代表从数据库查询到的数据
             每一个Queryset还能循环，循环后的数据就是每一个对象
+            最终filter_list中封装了option对象，queryset，request.GET
             """
         context = {
             'result_list': result_list,
             'list_display': self.list_display,
             'curd_obj': self,
             'add_url': add_url,
-            'filter_list':filter_list,
-            'action_list':action_list
+            'filter_list': filter_list,
+            'action_list': action_list
         }
         # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
@@ -222,9 +236,10 @@ class BaseCurdAdmin(object):
                 modelform_obj.save()
                 # 提交成功后返回列表页面
                 base_list_url = reverse(
-                    '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name))  # namespace 在site中
+                    '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
+                                                    self.model_name))  # namespace 在site中
                 list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
-                return redirect(list_url) # 跳转到新的列表页面
+                return redirect(list_url)  # 跳转到新的列表页面
         context = {
             'form': modelform_obj,
             'curd_obj': self,
@@ -259,11 +274,9 @@ class BaseCurdAdmin(object):
         else:
             obj = self.model_class.objects.filter(pk=pk).delete()
             base_list_url = reverse('{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
-                                                self.model_name))  # namespace 在site中
+                                                                    self.model_name))  # namespace 在site中
             list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
             return redirect(list_url)  # 跳转到新的列表页面
-
-
 
     def change_view(self, request, pk):
         """
@@ -272,13 +285,13 @@ class BaseCurdAdmin(object):
         2 在页面显示默认值 instance
         :return:
         """
-        obj = self.model_class.objects.filter(pk=pk).first() # 从数据库中获取数据
+        obj = self.model_class.objects.filter(pk=pk).first()  # 从数据库中获取数据
         if not obj:
             return HttpResponse("id不存在")
         if request.method == "GET":
-            modelform_obj = self.get_add_or_edit_modelform()(instance=obj) # instance = obj 显示默认值
+            modelform_obj = self.get_add_or_edit_modelform()(instance=obj)  # instance = obj 显示默认值
         else:
-            modelform_obj = self.get_add_or_edit_modelform()(data=request.POST,files=request.FILES,instance=obj)
+            modelform_obj = self.get_add_or_edit_modelform()(data=request.POST, files=request.FILES, instance=obj)
             # 参数中的instance代表修改数据，不加此参数，默认是增加数据
             if modelform_obj.is_valid():
                 modelform_obj.save()
@@ -290,7 +303,7 @@ class BaseCurdAdmin(object):
         context = {
             'form': modelform_obj
         }
-        return render(request,'yd/edit.html',context)
+        return render(request, 'yd/edit.html', context)
 
 
 class CurdSite(object):

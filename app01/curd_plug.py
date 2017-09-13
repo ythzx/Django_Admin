@@ -1,6 +1,7 @@
-from curd.service import v1
-from app01 import models
 from django.utils.safestring import mark_safe
+
+from app01 import models
+from curd.service import v1
 
 """
 此文件的用处：在每个APP中把当前APP的表注册到CURD插件中，参考的Django的admin文件
@@ -116,13 +117,13 @@ class CurdUserInfo(v1.BaseCurdAdmin):
 
     action_list = [initial, multi_del]  # 定制的action操作列表
 
-    # ########################################## 筛选条件 ##########################################
+    # ########################################## 筛选条件 ##################################
 
-    from .filter_code import FilterOption
+    from curd.utils.filter_code import FilterOption
     """
     把对象封装到FilterOption类中，传入的参数：
     field_or_func：数据库的字段或者函数
-    is_multi=False：是否是多选，这里默认是单选
+    is_multi=False：是否是多选，这里默认是单选，后期可以在此进行定制
     """
     filter_list = [
         FilterOption('username', False),

@@ -12,10 +12,10 @@
     {% if filter_list %}
         <div class="row">
             <h3>组合搜索</h3>
-            {% for queryset in filter_list %}
+            {% for fl_obj in filter_list %} <!-- fl_obj 是 FilterList的对象-->
                 <div class="row">
-                    {% for row in queryset %}
-                        <a href="#">{{ row }}</a>
+                    {% for row in fl_obj %}
+                        <a href="#">{{ row }}</a> <!--row 是每次yield中取出的内容-->
                     {% endfor %}
                 </div>
             {% endfor %}
