@@ -134,10 +134,19 @@ class BaseCurdAdmin(object):
         # print(url)
         # return HttpResponse('...')
         self.request = request  # 把request封装进来 包含请求信息
-        result_list = self.model_class.objects.all()  # 通过model_class 就能获取数据库中的queryset数据
-        # print(result_list)
-        # print(self.list_display)  # 从注册类的curd_plug中传进来
-        # print(self.model_class)
+
+        # #################################### 分页 ####################################
+
+        condition = {}  # 分页涉及筛选条件，把筛选的数据保存在condition 然后传入filter 中
+        from curd.utils.pager import PageInfo
+        current_page = request.GET.get('page')  # 从url中获取当前页
+        all_count = self.model_class.objects.filter(**condition).count()  # 总的数据是筛选后的数据
+        base_url = reverse('{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name))  # 当前url
+        page_obj = PageInfo(current_page, all_count, 10, base_url)
+        result_list = self.model_class.objects.filter(**condition)[page_obj.start:page_obj.end]
+        # 通过model_class 就能获取数据库中的queryset数据
+
+
 
         # #################################### Action操作 ####################################
         # get请求,显示下拉框
@@ -217,8 +226,10 @@ class BaseCurdAdmin(object):
             'curd_obj': self,
             'add_url': add_url,
             'filter_list': filter_list,
-            'action_list': action_list
+            'action_list': action_list,
+            'page_str':page_obj.pager
         }
+        # 分页是把page_obj 的pager方法进行调用生成HTML
         # 注意把self这个对象传递到了前端
         return render(request, 'yd/change_list.html', context)
 
@@ -237,10 +248,11 @@ class BaseCurdAdmin(object):
                 popid = request.GET.get('popup')
                 # 如果是通过popup提交的请求
                 if popid:
-                    pk = obj.pk # pk是对象的id
+                    pk = obj.pk  # pk是对象的id
                     title = str(obj)  # 通过__str__ 显示对象的中文
                     # 把数据封装到字典中data_dict 传到前端需要safe,否则Django内部会转义
-                    return render(request,'yd/popup_response.html',{'data_dict':{ 'pk': pk,'title': title,'popid': popid}})
+                    return render(request, 'yd/popup_response.html',
+                                  {'data_dict': {'pk': pk, 'title': title, 'popid': popid}})
                 else:
                     # 提交成功后返回列表页面
                     base_list_url = reverse(
@@ -337,7 +349,8 @@ class CurdSite(object):
             model_name = model_cls._meta.model_name
 
             # ret.append(url(r'^%s/%s' % (app_label, model_name), self.login))
-            ret.append(url(r'^%s/%s' % (app_label, model_name), include(curd_admin_obj.urls)))
+            ret.append(url(r'^%s/%s/' % (app_label, model_name), include(curd_admin_obj.urls)))
+            # 生成url
             # include中的参数 第一个是curd_admin_obj对象 urls是 BaseCurdAdmin的对象
         return ret
 
