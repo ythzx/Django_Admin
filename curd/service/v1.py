@@ -227,7 +227,7 @@ class BaseCurdAdmin(object):
         增加数据
         :return:
         """
-        print(request.GET.get('_changelistfilter'))  # 获取url中的信息，最后进行拼接
+        # print(request.GET.get('_changelistfilter'))  # 获取url中的信息，最后进行拼接
         if request.method == "GET":
             modelform_obj = self.get_add_or_edit_modelform()()  # 先执行函数并实例化对象
         else:
@@ -239,12 +239,8 @@ class BaseCurdAdmin(object):
                 if popid:
                     pk = obj.pk # pk是对象的id
                     title = str(obj)  # 通过__str__ 显示对象的中文
-                    data = {
-                        'pk':pk,
-                        'title':title,
-                        'popid':popid
-                    }
-                    return render(request,'yd/popup_response.html',data)
+                    # 把数据封装到字典中data_dict 传到前端需要safe,否则Django内部会转义
+                    return render(request,'yd/popup_response.html',{'data_dict':{ 'pk': pk,'title': title,'popid': popid}})
                 else:
                     # 提交成功后返回列表页面
                     base_list_url = reverse(

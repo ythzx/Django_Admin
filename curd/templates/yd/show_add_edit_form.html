@@ -35,11 +35,11 @@
     //发起popup页面的函数，在response中的opener中调用
     //生成option标签并设置属性
     //popupCallBack1 用于接收response.html页面发送的过来的数据
-    function popupCallBack1(popid, opid, optext) {
+    function popupCallBack1(data_dict) {
         var tag = document.createElement('option');
-        tag.innerHTML = optext;
-        tag.setAttribute('value', opid);
+        tag.innerHTML = data_dict.title;
+        tag.setAttribute('value', data_dict.pk);
         tag.setAttribute('selected', 'selected');// 默认选中添加的选项
-        document.getElementById(popid).appendChild(tag); // ug_ID最终传回来，通过id找到要添加的标签
+        document.getElementById(data_dict.popid).appendChild(tag); // ug_ID最终传回来，通过id找到要添加的标签
     }
 </script>

@@ -9,7 +9,9 @@
     //将数据发送给发起popup的页面
     //opener调用发起popup页面的函数popupCallBack1，同时把把数据(通过函数传参的形式)发送回popup页面，
     //注意的是模板语言中的传的参数是要加引号
-    opener.popupCallBack1('{{ popid }}', '{{ pk }}', '{{ title }}'); // 注意这里是字符串形式的
+    var data_dict = {{ data_dict|safe }} <!--前端页面需要safe把字典中的数据转义-->
+        {#    opener.popupCallBack1('{{ popid }}', '{{ pk }}', '{{ title }}'); // 注意这里是字符串形式的#}
+    opener.popupCallBack1(data_dict); //数据封装在data_dict中
     window.close(); // 关闭页面
 </script>
 </body>
