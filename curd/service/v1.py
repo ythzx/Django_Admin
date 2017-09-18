@@ -1,5 +1,6 @@
 from django.shortcuts import render, HttpResponse, redirect
 from django.urls import reverse
+import copy
 
 """
 使用文档：
@@ -142,7 +143,11 @@ class BaseCurdAdmin(object):
         current_page = request.GET.get('page')  # 从url中获取当前页
         all_count = self.model_class.objects.filter(**condition).count()  # 总的数据是筛选后的数据
         base_url = reverse('{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label, self.model_name))  # 当前url
-        page_obj = PageInfo(current_page, all_count, 10, base_url)
+        # 保留url中的数据功能
+        page_param_dict = copy.deepcopy(request.GET) # 通过深拷贝把URL中的数据复制一份,避免修改原来的数据
+        page_param_dict._mutable = True # 设置成True就能修改QueryDict数据
+
+        page_obj = PageInfo(current_page, all_count, 10, base_url,page_param_dict) # 把page_param_dict传递到分页中
         result_list = self.model_class.objects.filter(**condition)[page_obj.start:page_obj.end]
         # 通过model_class 就能获取数据库中的queryset数据
 

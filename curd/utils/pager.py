@@ -1,5 +1,5 @@
 class PageInfo(object):
-    def __init__(self, current_page, all_count, per_page, base_url, show_page=11):
+    def __init__(self, current_page, all_count, per_page, base_url, page_param_dict,show_page=11):
         """
         :param current_page:
         :param all_count: 数据库总行数
@@ -18,6 +18,7 @@ class PageInfo(object):
         self.all_pager = a
         self.show_page = show_page
         self.base_url = base_url
+        self.page_param_dict = page_param_dict # 传递进来的url信息
 
     @property
     def start(self):
@@ -54,20 +55,24 @@ class PageInfo(object):
         if self.current_page <= 1:
             prev = "<li><a href='#'>上一页</a></li>"
         else:
-            prev = "<li><a href='%s?page=%s'>上一页</a></li>" % (self.base_url, self.current_page - 1,)
+            self.page_param_dict['page'] = self.current_page - 1 # 将当前页面的url添加到QueryDict字典数据中
+            prev = "<li><a href='%s?%s'>上一页</a></li>" % (self.base_url, self.page_param_dict.urlencode())
+            # 通过urlencode把字典中的数据转换成url中的数据
         page_list.append(prev)
 
         for i in range(begin, stop):
+            self.page_param_dict['page'] = i
             if i == self.current_page:
-                temp = "<li class='active'><a  href='%s?page=%s'>%s</a></li>" % (self.base_url, i, i,)
+                temp = "<li class='active'><a  href='%s?%s'>%s</a></li>" % (self.base_url, self.page_param_dict.urlencode(), i,)
             else:
-                temp = "<li><a href='%s?page=%s'>%s</a></li>" % (self.base_url, i, i,)
+                temp = "<li><a href='%s?%s'>%s</a></li>" % (self.base_url, self.page_param_dict.urlencode(), i,)
             page_list.append(temp)
 
         if self.current_page >= self.all_pager:
             nex = "<li><a href='#'>下一页</a></li>"
         else:
-            nex = "<li><a href='%s?page=%s'>下一页</a></li>" % (self.base_url, self.current_page + 1,)
+            self.page_param_dict['page'] = self.current_page + 1
+            nex = "<li><a href='%s?%s'>下一页</a></li>" % (self.base_url, self.page_param_dict.urlencode(),)
         page_list.append(nex)
 
         return ''.join(page_list)
