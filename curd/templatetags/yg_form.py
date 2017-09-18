@@ -15,6 +15,7 @@ def show_add_edit_form(form):
     form_list = []
     for item in form:
         row = {'is_popup': False, 'item': None, 'popup_url': None}
+        # print(item.auto_id) # item.auto_id 在字段的前面加上了id
         from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
         if isinstance(item.field, ModelChoiceField) and item.field.queryset.model in v1.site._registry:
             """
@@ -25,7 +26,7 @@ def show_add_edit_form(form):
             target_app_label = item.field.queryset.model._meta.app_label # 获取APP的名字
             target_model_name = item.field.queryset.model._meta.model_name # 获取小写的表名
             url_name = "{0}:{1}_{2}_add".format(v1.site.namespace, target_app_label, target_model_name)
-            target_url = reverse(url_name) # 反向生成URL
+            target_url = "{0}?popup={1}".format(reverse(url_name),item.auto_id) # 反向生成URL 并添加popup
 
             row['is_popup'] = True
             row['item'] = item

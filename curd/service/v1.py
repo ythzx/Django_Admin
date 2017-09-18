@@ -233,13 +233,25 @@ class BaseCurdAdmin(object):
         else:
             modelform_obj = self.get_add_or_edit_modelform()(data=request.POST, files=request.FILES)
             if modelform_obj.is_valid():
-                modelform_obj.save()
-                # 提交成功后返回列表页面
-                base_list_url = reverse(
-                    '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
-                                                    self.model_name))  # namespace 在site中
-                list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
-                return redirect(list_url)  # 跳转到新的列表页面
+                obj = modelform_obj.save()  # save 的返回值是添加的数据
+                popid = request.GET.get('popup')
+                # 如果是通过popup提交的请求
+                if popid:
+                    pk = obj.pk # pk是对象的id
+                    title = str(obj)  # 通过__str__ 显示对象的中文
+                    data = {
+                        'pk':pk,
+                        'title':title,
+                        'popid':popid
+                    }
+                    return render(request,'yd/popup_response.html',data)
+                else:
+                    # 提交成功后返回列表页面
+                    base_list_url = reverse(
+                        '{0}:{1}_{2}_changelist'.format(self.site.namespace, self.app_label,
+                                                        self.model_name))  # namespace 在site中
+                    list_url = "{0}?{1}".format(base_list_url, request.GET.get('_changelistfilter'))
+                    return redirect(list_url)  # 跳转到新的列表页面
         context = {
             'form': modelform_obj,
             'curd_obj': self,

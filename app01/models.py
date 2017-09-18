@@ -7,6 +7,7 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
+
 class UserGroup(models.Model):
     title = models.CharField(max_length=32)
 
